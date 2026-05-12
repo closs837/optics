@@ -1,0 +1,11 @@
+{
+  "version": "0.18.20",
+  "source": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.18.20.tgz",
+  "platforms": {
+    "darwin-arm64": "cee17a60b0396cc5d0f0c03b44b137593c1aacc378ba4b22c1e25bb5310ff05a",
+    "darwin-x64": "3df9fd2f4e1256af3b81eeab324a960c6521edabb2ad03d2ea11c61b4483237a",
+    "linux-arm64": "d713fbacb4d1ba5cba442ccfa1dec8cfa0ba1d13b5c48cd9f2f30345aa1a24da",
+    "linux-x64": "7711b761d0e3948ea8fc42789a6ea20692da3fd55d64f74a8e044b533f9d5f8e"
+  },
+  "source-x64": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.18.20.tgz"
+}
