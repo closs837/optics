@@ -10,7 +10,9 @@
     "build": "vinext build",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:local": "wrangler d1 migrations apply DB --local --config wrangler.local.json"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
