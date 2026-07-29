@@ -1,3 +1,12 @@
-export default function Home() {
-  return <main><h1>Optics</h1><p>Lending intelligence on Ink.</p></main>;
+import Monitor from './monitor';
+import { getChatGPTUser } from './chatgpt-auth';
+export const dynamic = 'force-dynamic';
+export default async function Home() {
+  const user = await getChatGPTUser();
+  return (
+    <Monitor
+      signedIn={!!user}
+      displayName={user?.fullName ?? (user ? 'My account' : null)}
+    />
+  );
 }
