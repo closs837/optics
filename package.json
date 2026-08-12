@@ -13,7 +13,9 @@
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:local": "wrangler d1 migrations apply DB --local --config wrangler.local.json",
-    "build:lightsail": "node scripts/build-lightsail.mjs"
+    "build:lightsail": "node scripts/build-lightsail.mjs",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "start": "wrangler dev --config dist/server/wrangler.json"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
