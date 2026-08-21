@@ -1,0 +1,15 @@
+# IDs and domains below are examples. Use resources in your own account.
+# Prefer CLOUDFLARE_API_TOKEN in your environment, or fill this optional parameter.
+# cloudflare_api_token = "your-scoped-token"
+account_id         = "00000000000000000000000000000000"
+zone_id            = "00000000000000000000000000000000"
+hostname           = "positions.example.com"
+name               = "optics"
+access_team_domain = "your-team.cloudflareaccess.com"
+allowed_emails     = ["you@example.com"]
+
+# Optional: restrict sign-in to specific, existing Access identity providers.
+# access_identity_provider_ids = ["00000000-0000-4000-8000-000000000000"]
+
+# Optional region for a new D1 primary: wnam, enam, weur, eeur, apac, oc.
+# d1_location_hint = "enam"
