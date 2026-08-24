@@ -15,7 +15,9 @@
     "db:local": "wrangler d1 migrations apply DB --local --config wrangler.local.json",
     "build:lightsail": "node scripts/build-lightsail.mjs",
     "build:cloudflare": "node scripts/build-cloudflare.mjs",
-    "start": "wrangler dev --config dist/server/wrangler.json"
+    "start": "wrangler dev --config dist/server/wrangler.json",
+    "deploy:cloudflare:plan": "node scripts/deploy-cloudflare.mjs plan",
+    "deploy:cloudflare:apply": "node scripts/deploy-cloudflare.mjs apply"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
