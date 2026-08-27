@@ -17,7 +17,9 @@
     "build:cloudflare": "node scripts/build-cloudflare.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "deploy:cloudflare:plan": "node scripts/deploy-cloudflare.mjs plan",
-    "deploy:cloudflare:apply": "node scripts/deploy-cloudflare.mjs apply"
+    "deploy:cloudflare:apply": "node scripts/deploy-cloudflare.mjs apply",
+    "infra:validate": "terraform -chdir=infra/lightsail validate",
+    "infra:test": "terraform -chdir=infra/lightsail test"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
