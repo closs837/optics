@@ -1,0 +1,28 @@
+# AWS credentials come from your existing AWS CLI login or environment.
+aws_region = "us-east-2"
+# aws_profile = "production"
+name = "optics"
+lightsail_bundle_id = "medium_3_0"
+data_disk_size_gb = 8
+
+# Existing registered domain with Namecheap DNS enabled.
+domain = "example.com"
+subdomain = "positions" # @ serves example.com itself.
+namecheap_user_name = "your-namecheap-username"
+namecheap_client_ip = "177.16.198.241" # Your allowlisted deployer IP; also used for SSH.
+# namecheap_api_user = "optional-separate-api-user"
+# namecheap_api_key = "your-api-key" # Or NAMECHEAP_API_KEY / TF_VAR_namecheap_api_key.
+acme_email = "you@example.com"
+
+# Register an OIDC web app with this callback:
+# https://positions.example.com/oauth2/callback
+oidc_issuer_url = "https://accounts.google.com"
+oidc_client_id = "your-web-application-client-id"
+# oidc_client_secret = "your-client-secret" # Or TF_VAR_oidc_client_secret.
+allowed_emails = ["you@example.com"]
+
+# Optional access alerts after a permitted user opens the workspace.
+# slack_webhook_url = "https://hooks.slack.com/services/..." # Or TF_VAR_slack_webhook_url.
+
+# Increase after rotating the OIDC client secret or Slack webhook.
+configuration_revision = 1
