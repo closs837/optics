@@ -1,0 +1,16 @@
+[Unit]
+Description=Optics OIDC sign-in
+After=network-online.target position-lens.service
+Wants=network-online.target
+[Service]
+User=position-lens-auth
+Group=position-lens-auth
+ExecStart=/usr/local/bin/oauth2-proxy --config=/etc/position-lens/oauth2-proxy.cfg
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+[Install]
+WantedBy=multi-user.target

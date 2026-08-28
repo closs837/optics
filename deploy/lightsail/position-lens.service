@@ -1,0 +1,24 @@
+[Unit]
+Description=Optics
+After=network-online.target
+Wants=network-online.target
+RequiresMountsFor=/srv/position-lens-data
+[Service]
+User=position-lens
+Group=position-lens
+WorkingDirectory=/opt/position-lens/current
+Environment=NODE_ENV=production
+Environment=DATABASE_PATH=/srv/position-lens-data/app/position-lens.sqlite
+Environment=POSITION_LENS_CONFIG=/etc/position-lens/runtime.json
+ExecStart=/usr/local/bin/node deploy/node/server.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/position-lens-data/app
+UMask=0077
+[Install]
+WantedBy=multi-user.target
