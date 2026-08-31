@@ -1,0 +1,7 @@
+[Unit]
+Description=Optics consistent SQLite backup
+RequiresMountsFor=/srv/position-lens-data
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/position-lens/current/deploy/lightsail/backup.sh
+UMask=0077
