@@ -19,7 +19,9 @@
     "deploy:cloudflare:plan": "node scripts/deploy-cloudflare.mjs plan",
     "deploy:cloudflare:apply": "node scripts/deploy-cloudflare.mjs apply",
     "infra:validate": "terraform -chdir=infra/lightsail validate",
-    "infra:test": "terraform -chdir=infra/lightsail test"
+    "infra:test": "terraform -chdir=infra/lightsail test",
+    "deploy:plan": "node scripts/lightsail.mjs plan",
+    "deploy:apply": "node scripts/lightsail.mjs apply"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
