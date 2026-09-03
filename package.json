@@ -22,7 +22,8 @@
     "infra:test": "terraform -chdir=infra/lightsail test",
     "deploy:plan": "node scripts/lightsail.mjs plan",
     "deploy:apply": "node scripts/lightsail.mjs apply",
-    "test:lightsail": "node tests/node-runtime.mjs"
+    "test:lightsail": "node tests/node-runtime.mjs",
+    "test:cloudflare": "node tests/cloudflare-runtime.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
