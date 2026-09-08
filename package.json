@@ -24,7 +24,8 @@
     "deploy:apply": "node scripts/lightsail.mjs apply",
     "test:lightsail": "node tests/node-runtime.mjs",
     "test:cloudflare": "node tests/cloudflare-runtime.mjs",
-    "test:integration": "node tests/integration.mjs"
+    "test:integration": "node tests/integration.mjs",
+    "test:auth": "node tests/oidc-runtime.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
