@@ -62,6 +62,7 @@ export function applyEvidence(
     ...ledger.inputs.filter((item) => item.header.hash !== id),
     structuredClone(input),
   ];
+  // A block height identifies the witness: one decision per height is enough.
   const cacheKey = input.chainId + ':' + BigInt(input.header.number);
   const cached = ledger.cache[cacheKey];
   const root = cached?.root ?? receiptRoot(input.receipts);
