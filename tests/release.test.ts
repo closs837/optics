@@ -16,20 +16,21 @@ await test('apply refuses changed modules, assets, SQL, configuration, scripts o
   const names = [
     'package.json',
     'package-lock.json',
-    '.cloudflare-build/server/index.js',
-    '.cloudflare-build/client/app.css',
+    '.lightsail-build/app/dist/server/index.js',
+    '.lightsail-build/app/dist/client/app.css',
     'drizzle/0000.sql',
-    'scripts/migrate-cloudflare.mjs',
-    'infra/terraform/main.tf',
-    'infra/terraform/terraform.tfvars',
-    'infra/terraform/.terraform.lock.hcl',
+    'scripts/provision-lightsail.mjs',
+    'deploy/lightsail/bootstrap.sh',
+    'infra/lightsail/main.tf',
+    'infra/lightsail/terraform.tfvars',
+    'infra/lightsail/.terraform.lock.hcl',
   ];
   try {
     for (const name of names) {
       await mkdir(path.dirname(path.join(root, name)), { recursive: true });
       await writeFile(path.join(root, name), 'original');
     }
-    const planPath = path.join(root, 'infra/terraform/release.tfplan');
+    const planPath = path.join(root, 'infra/lightsail/release.tfplan');
     await writeFile(planPath, 'saved plan');
     const receipt = {
       format: 1,
@@ -45,7 +46,10 @@ await test('apply refuses changed modules, assets, SQL, configuration, scripts o
       );
       await writeFile(path.join(root, name), 'original');
     }
-    const added = path.join(root, '.cloudflare-build/client/unplanned.js');
+    const added = path.join(
+      root,
+      '.lightsail-build/app/dist/client/unplanned.js',
+    );
     await writeFile(added, 'added');
     await assert.rejects(
       verifyRelease(root, planPath, receipt),

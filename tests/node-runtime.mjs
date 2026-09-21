@@ -17,8 +17,8 @@ const temporary = await mkdtemp(
 );
 const config = {
   origin: 'https://positions.example.com',
-  oidc_issuer_url: 'https://issuer.example.com',
-  allowed_emails: ['first@example.com', 'second@example.com'],
+  auth_secret: 'local-integration-secret-not-for-production-'.repeat(2),
+  auto_approve_email_domain: 'inkfnd.com',
 };
 await writeFile(path.join(temporary, 'runtime.json'), JSON.stringify(config));
 const env = {
@@ -31,6 +31,7 @@ const env = {
 let child;
 let base;
 let logs = '';
+const cookies = new Map();
 async function start() {
   child = spawn(process.execPath, ['deploy/node/server.mjs'], {
     cwd: app,
@@ -82,13 +83,13 @@ async function request(
     headers: {
       Host: 'positions.example.com',
       'X-Forwarded-Proto': 'https',
+      'X-Real-IP': '127.0.0.1',
       ...(data === undefined
         ? {}
         : { 'Content-Length': Buffer.byteLength(JSON.stringify(data)) }),
       ...(auth
         ? {
-            'X-Forwarded-User': user + '-subject',
-            'X-Forwarded-Email': user + '@example.com',
+            Cookie: cookies.get(user) ?? '',
           }
         : {}),
       ...(method !== 'GET'
@@ -133,6 +134,20 @@ try {
     assert.equal(migration.status, 0, migration.stderr);
   }
   await start();
+  for (const user of ['first', 'second']) {
+    const registered = await request('/api/auth/sign-up/email', {
+      auth: false,
+      method: 'POST',
+      data: {
+        name: user,
+        email: user + '@inkfnd.com',
+        password: 'integration-only-password-42',
+      },
+    });
+    assert.equal(registered.status, 200, JSON.stringify(registered.data));
+    const cookie = registered.headers.get('set-cookie').split(';')[0];
+    cookies.set(user, cookie);
+  }
   assert.equal(
     (
       await request('/api/state', {
@@ -270,7 +285,7 @@ try {
   assert(markets.data.market.reserves.length > 0);
   assert.equal(
     (await request('/signout-with-chatgpt')).headers.get('location'),
-    '/oauth2/sign_out?rd=%2Foauth2%2Fsign_in',
+    '/auth?mode=logout',
   );
   assert.equal(
     (await request('/api/watches', { method: 'DELETE', data: { id } })).status,
@@ -292,7 +307,7 @@ try {
         .prepare('SELECT COUNT(*) AS n FROM _position_lens_migrations')
         .first()
     ).n,
-    3,
+    4,
   );
   db.close();
   console.log(
@@ -304,7 +319,7 @@ try {
       checks: [
         'real SQLite',
         'idempotent migrations',
-        'proxy identity validation',
+        'database session authentication',
         'SSR',
         'live RPC',
         'cross-owner isolation',

@@ -8,7 +8,7 @@ await test('expired sessions start no background sign-in and produce an actionab
     Response.json({ error: 'Sign-in required.' }, { status: 401 }),
     new Response(null, {
       status: 302,
-      headers: { Location: '/oauth2/sign_in' },
+      headers: { Location: '/auth' },
     }),
     { type: 'opaqueredirect', status: 0 } as Response,
   ]) {

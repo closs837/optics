@@ -8,13 +8,6 @@ import path from 'node:path';
 const releases = {
   'darwin-arm64': [
     [
-      'oauth2-proxy/oauth2-proxy',
-      'v7.15.4',
-      'oauth2-proxy-v7.15.4.darwin-arm64.tar.gz',
-      'ec5acdd46df12da2a2449e77aa9e16bc6ff0ad46c87b9e19c8c93c18be6dbb4d',
-      'oauth2-proxy-v7.15.4.darwin-arm64/oauth2-proxy',
-    ],
-    [
       'caddyserver/caddy',
       'v2.11.4',
       'caddy_2.11.4_mac_arm64.tar.gz',
@@ -23,13 +16,6 @@ const releases = {
     ],
   ],
   'linux-x64': [
-    [
-      'oauth2-proxy/oauth2-proxy',
-      'v7.15.4',
-      'oauth2-proxy-v7.15.4.linux-amd64.tar.gz',
-      '4fbe902189aab713d9c0519b90a645032d4636ecb523dc36f5cc312d8ebef1e2',
-      'oauth2-proxy-v7.15.4.linux-amd64/oauth2-proxy',
-    ],
     [
       'caddyserver/caddy',
       'v2.11.4',
@@ -73,5 +59,5 @@ export async function authBinaries(root) {
     execFileSync('tar', ['-xzf', file, '-C', directory, executable]);
     output.push(path.join(directory, executable));
   }
-  return { oauth2Proxy: output[0], caddy: output[1] };
+  return { caddy: output[0] };
 }
