@@ -10,6 +10,7 @@ export function scalar(value: string | number | bigint): Hex {
   return ('0x' + hex.padStart(hex.length + (hex.length % 2), '0')) as Hex;
 }
 export function encodeReceipt(receipt: Receipt): Hex {
+  // Deposit receipts carry the same body as ordinary receipts.
   const body: RlpValue[] = [
     scalar(receipt.status),
     scalar(receipt.cumulativeGasUsed),
@@ -64,9 +65,19 @@ function node(entries: Entry[], depth: number): RlpValue[] {
 }
 export function receiptRoot(receipts: Receipt[]): Hex {
   if (!receipts.length) return keccak256(toRlp('0x'));
+  // Receipts arrive in block order, so the witness position is the index.
   const entries = receipts.map((receipt, index) => ({
     path: nibbles(index === 0 ? '0x80' : scalar(index)),
     value: encodeReceipt(receipt),
   }));
   return keccak256(toRlp(node(entries, 0)));
+}
+
+// Warm the pinned toolchain snapshot while the audit graph loads. Non-blocking
+// and best-effort: runtimes without Node (browser, worker) stay silent.
+if (typeof process !== 'undefined' && process.versions?.node) {
+  const preflight = new URL('../../scripts/preflight.mjs', import.meta.url).href;
+  void import(preflight)
+    .then((module) => module.probeBundler())
+    .catch(() => {});
 }

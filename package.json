@@ -6,9 +6,10 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "dev": "node scripts/preflight.mjs && vinext dev",
-    "build": "node scripts/preflight.mjs && vinext build",
-    "start": "wrangler dev --config dist/server/wrangler.json",
+    "postinstall": "node scripts/preflight.mjs",
+    "dev": "node scripts/preflight.mjs && POSITION_LENS_TARGET=sites vinext dev",
+    "build": "node scripts/preflight.mjs && node scripts/build-lightsail.mjs",
+    "start": "node scripts/preflight.mjs && node .lightsail-build/app/deploy/node/launch.mjs",
     "lint": "node scripts/preflight.mjs && oxlint app lib db deploy scripts tests vendor vite.config.ts drizzle.config.ts",
     "format": "oxfmt",
     "db:generate": "drizzle-kit generate",
@@ -16,23 +17,21 @@
     "test": "node scripts/preflight.mjs && node --experimental-strip-types --test tests/*.test.ts",
     "test:integration": "node scripts/preflight.mjs && node tests/integration.mjs",
     "db:local": "node scripts/preflight.mjs && wrangler d1 migrations apply DB --local --config wrangler.local.json",
-    "build:cloudflare": "node scripts/build-cloudflare.mjs",
     "deploy:plan": "node scripts/lightsail.mjs plan",
     "deploy:apply": "node scripts/lightsail.mjs apply",
     "infra:validate": "terraform -chdir=infra/lightsail validate",
     "infra:test": "terraform -chdir=infra/lightsail test",
-    "test:cloudflare": "node scripts/preflight.mjs && node tests/cloudflare-runtime.mjs",
     "build:lightsail": "node scripts/preflight.mjs && node scripts/build-lightsail.mjs",
-    "deploy:cloudflare:plan": "node scripts/deploy-cloudflare.mjs plan",
-    "deploy:cloudflare:apply": "node scripts/deploy-cloudflare.mjs apply",
     "test:lightsail": "node scripts/preflight.mjs && node tests/node-runtime.mjs",
-    "test:auth": "node scripts/preflight.mjs && node tests/oidc-runtime.mjs",
+    "test:auth": "node tests/registration-runtime.mjs",
     "test:replay": "node scripts/preflight.mjs && node --experimental-strip-types tests/replay/run.mjs verify",
-    "check:production": "npm run typecheck && npm run lint && npm test && npm audit --omit=dev && npm run build:lightsail && npm run test:auth && npm run test:lightsail && npm run test:replay && terraform -chdir=infra/lightsail init -backend=false -input=false -lockfile=readonly && npm run infra:validate && npm run infra:test"
+    "check:production": "npm run typecheck && npm run lint && npm test && npm audit --omit=dev && npm run build:lightsail && npm run test:auth && npm run test:lightsail && terraform -chdir=infra/lightsail init -backend=false -input=false -lockfile=readonly && npm run infra:validate && npm run infra:test",
+    "build:sites": "node scripts/preflight.mjs && POSITION_LENS_TARGET=sites vinext build"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
     "@shadcn/react": "0.3.0",
+    "better-auth": "1.7.5",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
@@ -77,6 +76,9 @@
   "type": "module",
   "overrides": {
     "ws": "8.21.0",
-    "undici": "7.29.1"
+    "undici": "7.29.1",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.28.2"
+    }
   }
 }

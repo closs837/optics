@@ -32,7 +32,7 @@ function assertRuntime() {
 
 // Vendored toolchain snapshot: see vendor/esbuild/manifest.json for the pinned
 // sha256 per platform. Verified on every probe.
-async function probeBundler() {
+export async function probeBundler() {
   const platform = `${process.platform}-${process.arch}`;
   const directory = path.join(root, 'vendor', 'esbuild', platform);
   const binary = path.join(directory, 'esbuild');
