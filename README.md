@@ -12,7 +12,7 @@ npm run db:local
 npm run dev
 ```
 
-The Sites development plugin signs you in with your site identity through the normal Sign in button. The Lightsail deployment uses OIDC sign-in; the hosted Sites version uses ChatGPT identity. The app has no wallet connection or signing flow.
+The Sites development plugin signs you in with your site identity through the normal Sign in button. The Lightsail deployment uses email/password registration with operator approval; the hosted Sites version uses ChatGPT identity. The app has no wallet connection or signing flow.
 
 ```sh
 npm test
@@ -42,7 +42,7 @@ Integration tests run only against loopback hosts. They use a temporary watch an
 
 ## Implementation
 
-- React/Vinext, with a Node server for Lightsail and a Worker adapter for Sites/Cloudflare.
+- React/Vinext, with a Node server for Lightsail and an optional Sites preview.
 - Persistent SQLite on Lightsail or Cloudflare D1, using the same generated SQL migrations and prepared application queries.
 - Server-side identity and owner checks on every saved-data endpoint, same-origin checks on mutations, bounded request validation, rate limits, and per-watch refresh leases.
 - Viem read-only contract calls; JSON-RPC batching and endpoint failover. Public chain data uses one block per snapshot.
@@ -72,11 +72,9 @@ Mutation bodies are JSON and require a same-origin request. Scenario POST fields
 
 ## Deployment
 
-The default deployment uses **AWS Lightsail, a static IPv4 address, Namecheap DNS, Caddy HTTPS, OIDC sign-in, and persistent SQLite on a separate disk**. Use the [Lightsail deployment guide](infra/lightsail/README.md) and [parameter template](infra/lightsail/terraform.tfvars.example). Run `npm run deploy:plan`, review the saved plan, then `npm run deploy:apply`.
+The default deployment uses **AWS Lightsail, a static IPv4 address, Namecheap DNS, Caddy HTTPS, local account registration, and persistent SQLite on a separate disk**. Use the [Lightsail deployment guide](infra/lightsail/README.md) and [parameter template](infra/lightsail/terraform.tfvars.example). Run `npm run deploy:plan`, review the saved plan, then `npm run deploy:apply`.
 
-Run `npm run check:production` before deployment. It includes real Caddy/OAuth2 Proxy login tests with a local HTTPS OIDC issuer, live Ink API checks, database persistence, and Terraform configuration validation. The production app uses your registered identity provider; no development fallback applies there. An expired session pauses automatic checks and provides a sign-in link. Your actual domain, cloud provisioning, provider credentials, and backup restoration still need validation in your deployment environment.
-
-The optional [Cloudflare deployment](infra/terraform/README.md) remains available through `npm run deploy:cloudflare:plan` and `npm run deploy:cloudflare:apply`.
+Run `npm run check:production` before deployment. It includes real HTTPS registration/login tests through Caddy, live Ink API checks, database persistence, and Terraform configuration validation. Only `inkfnd.com` registrations are immediately approved; all other accounts remain pending until approved over SSH. Passwords are hashed, sessions persist in SQLite, and pending accounts cannot use workspace APIs. Email ownership is not verified; automatic approval never grants operator privileges. An expired session pauses automatic checks and provides a sign-in link. Your actual domain, cloud provisioning, and backup restoration still need validation in your deployment environment.
 
 `.openai/hosting.json` identifies the private Site and its logical `DB` binding. Sites applies migrations and provisions production database wiring. No application secrets are required for the supported read-only data sources. Local `.wrangler` data and `.env` files are ignored; they must not be published.
 
