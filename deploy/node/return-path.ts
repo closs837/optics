@@ -4,9 +4,12 @@ export function safeReturnPath(value: string | null, origin: string) {
     const target = new URL(value, origin);
     if (
       target.origin !== origin ||
-      ['/signin-with-chatgpt', '/signout-with-chatgpt', '/callback'].includes(
-        target.pathname,
-      )
+      [
+        '/auth',
+        '/signin-with-chatgpt',
+        '/signout-with-chatgpt',
+        '/callback',
+      ].includes(target.pathname)
     )
       return '/';
     return target.pathname + target.search + target.hash;

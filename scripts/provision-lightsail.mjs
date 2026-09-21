@@ -28,10 +28,9 @@ assert(
 );
 const config = {
   ...JSON.parse(process.env.POSITION_LENS_CONFIG_JSON ?? '{}'),
-  oidc_client_secret: process.env.POSITION_LENS_OIDC_SECRET,
   slack_webhook_url: process.env.POSITION_LENS_SLACK_WEBHOOK ?? '',
 };
-configuration(config, 'validation-only');
+configuration(config, 'validation-only'.repeat(4));
 const release = path.join(root, '.lightsail-build/release.tar.gz');
 const manifest = JSON.parse(
   await readFile(path.join(root, '.lightsail-build/manifest.json'), 'utf8'),
@@ -67,6 +66,23 @@ let stage;
 let sshOptions;
 let target;
 try {
+  const diskDetails = JSON.parse(
+    run('aws', [...awsArgs, 'lightsail', 'get-disk', '--disk-name', disk], {
+      capture: true,
+    }).stdout,
+  ).disk;
+  assert(
+    diskDetails.attachedTo === instance &&
+      diskDetails.isSystemDisk === false &&
+      diskDetails.path === '/dev/xvdf',
+    'The expected application disk is not attached.',
+  );
+  const volume = diskDetails.supportCode?.match(/\/(vol-[a-f0-9]{8,32})$/)?.[1];
+  assert(
+    volume,
+    'AWS did not return a verifiable volume identifier for the data disk.',
+  );
+  const diskSerial = volume.replace('-', '');
   let details;
   for (let attempt = 0; attempt < 60; attempt++) {
     const result = run(
@@ -208,17 +224,22 @@ try {
       '/install-release.sh ' +
       stage +
       ' ' +
-      manifest.sha256,
+      manifest.sha256 +
+      ' ' +
+      diskSerial,
   ]);
   console.log('Application installed. Checking public HTTPS and sign-in...');
   let ready = false;
   for (let attempt = 0; attempt < 60; attempt++) {
     try {
-      const response = await fetch(config.origin + '/oauth2/sign_in', {
+      const response = await fetch(config.origin + '/auth', {
         redirect: 'manual',
         signal: AbortSignal.timeout(10_000),
       });
-      if ([200, 302, 303].includes(response.status)) {
+      if (
+        response.status === 200 &&
+        (await response.text()).includes('Create an account')
+      ) {
         ready = true;
         break;
       }

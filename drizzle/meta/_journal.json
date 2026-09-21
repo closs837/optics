@@ -22,6 +22,13 @@
       "when": 1790043870773,
       "tag": "0002_verified_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790063265291,
+      "tag": "0003_local_accounts",
+      "breakpoints": true
     }
   ]
 }

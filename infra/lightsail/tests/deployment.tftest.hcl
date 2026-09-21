@@ -11,10 +11,6 @@ variables {
   namecheap_api_key   = "fixture-not-a-real-key"
   namecheap_client_ip = "203.0.113.10"
   acme_email          = "owner@example.com"
-  oidc_issuer_url     = "https://issuer.example.com"
-  oidc_client_id      = "fixture-client"
-  oidc_client_secret  = "fixture-not-a-real-secret"
-  allowed_emails      = ["owner@example.com"]
 }
 run "lightsail_dns_and_persistence" {
   command = plan
@@ -35,8 +31,12 @@ run "lightsail_dns_and_persistence" {
     error_message = "SSH must be restricted to the deployer address."
   }
   assert {
-    condition     = one(aws_lightsail_instance.app.add_on).status == "Enabled" && output.oidc_redirect_uri == "https://positions.example.com/oauth2/callback"
-    error_message = "Snapshots and the canonical OIDC callback must be configured."
+    condition     = one([for rule in aws_lightsail_instance_public_ports.app.port_info : rule.cidr_list_aliases if rule.from_port == 22]) == toset(["lightsail-connect"])
+    error_message = "AWS browser SSH must remain available for authenticated host-key discovery and operator access."
+  }
+  assert {
+    condition     = one(aws_lightsail_instance.app.add_on).status == "Enabled" && var.aws_region == "ca-central-1" && aws_lightsail_instance.app.bundle_id == "medium_3_0"
+    error_message = "Snapshots and the medium Montreal instance must be configured."
   }
 }
 run "apex_domain" {
@@ -47,13 +47,15 @@ run "apex_domain" {
     error_message = "Apex domains must be supported."
   }
 }
-run "reject_empty_users" {
+run "reject_wildcard_approval_domain" {
   command = plan
-  variables { allowed_emails = [] }
-  expect_failures = [var.allowed_emails]
+  variables { auto_approve_email_domain = "*.inkfnd.com" }
+  expect_failures = [var.auto_approve_email_domain]
 }
-run "reject_insecure_oidc" {
+run "registration_defaults" {
   command = plan
-  variables { oidc_issuer_url = "http://issuer.example.com" }
-  expect_failures = [var.oidc_issuer_url]
+  assert {
+    condition     = local.config.auto_approve_email_domain == "inkfnd.com"
+    error_message = "Only the exact configured email domain is automatically approved."
+  }
 }

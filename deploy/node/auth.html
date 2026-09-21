@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Optics — Account</title>
+  <link rel="stylesheet" href="/auth/style.css">
+  <script type="module" src="/auth/app.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="/">optics<span> / INK</span></a><span class="edition">LENDING INTELLIGENCE</span></header>
+  <main>
+    <aside><span class="eyebrow">THE INK WORKSPACE</span><h1>A clearer view<br>of your positions.</h1><p>Live lending markets. Saved risk scenarios.<br>Your portfolio, in focus.</p><div class="rule"></div><span class="small">Independent tooling for builders on Ink.</span></aside>
+    <section class="panel" aria-labelledby="title">
+      <span class="eyebrow" id="step">ACCOUNT ACCESS</span>
+      <h2 id="title">Sign in to Optics</h2>
+      <p id="description">Use your Optics account to open your workspace.</p>
+      <p id="notice" role="status" aria-live="polite" hidden></p>
+      <form id="account-form" hidden>
+        <label id="name-field" hidden>Name<input name="name" autocomplete="name" maxlength="80"></label>
+        <label id="email-field">Email<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
+        <label id="current-field" hidden>Current password<input name="currentPassword" type="password" autocomplete="current-password" maxlength="128"></label>
+        <label id="password-field"><span id="password-label">Password</span><input name="password" type="password" autocomplete="current-password" maxlength="128" required></label>
+        <label id="confirm-field" hidden>Confirm password<input name="confirmation" type="password" autocomplete="new-password" maxlength="128"></label>
+        <button class="primary" id="submit" type="submit">Sign in <span aria-hidden="true">↗</span></button>
+      </form>
+      <div id="account-actions" hidden>
+        <p class="identity" id="account-email"></p>
+        <a class="primary" id="workspace-link" href="/" hidden>Open workspace <span aria-hidden="true">↗</span></a>
+        <button class="primary" id="refresh" type="button" hidden>Check approval status</button>
+        <button class="primary" id="logout" type="button" hidden>Sign out</button>
+        <nav><a id="password-link" href="/auth?mode=password">Change password</a><a id="logout-link" href="/auth?mode=logout">Sign out</a></nav>
+      </div>
+      <nav id="switch"><span id="switch-label">New to Optics?</span><a id="switch-link" href="/auth?mode=register">Create an account</a></nav>
+      <p class="small" id="policy">Registration is open. Account access is subject to approval.</p>
+      <p class="small" id="recovery-note">Forgot your password? Contact the workspace operator for a recovery link.</p>
+    </section>
+  </main>
+  <footer><span>OPTICS / INDEPENDENT INK TOOLING</span><span>READ-ONLY CHAIN DATA · NO WALLET CONNECTION</span></footer>
+  <noscript>Enable JavaScript to register or sign in to your Optics account.</noscript>
+</body>
+</html>

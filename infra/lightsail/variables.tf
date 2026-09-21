@@ -9,7 +9,7 @@ variable "name" {
 }
 variable "aws_region" {
   type    = string
-  default = "us-east-2"
+  default = "ca-central-1"
 }
 variable "aws_profile" {
   description = "Optional local AWS CLI/profile name. Null uses the standard AWS credential chain."
@@ -45,7 +45,7 @@ variable "domain" {
 variable "subdomain" {
   description = "DNS record hostname, e.g. positions. Use @ for the domain apex."
   type        = string
-  default     = "positions"
+  default     = "@"
   validation {
     condition     = var.subdomain == "@" || can(regex("^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$", var.subdomain))
     error_message = "Use @ or a lowercase DNS hostname."
@@ -83,41 +83,25 @@ variable "namecheap_client_ip" {
   }
 }
 variable "acme_email" {
-  description = "Email for HTTPS certificate renewal notices."
+  description = "Optional email for certificate renewal notices. Empty uses ACME without an email contact."
   type        = string
+  default     = ""
   validation {
-    condition     = can(regex("^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$", var.acme_email))
-    error_message = "Provide a valid email."
+    condition     = var.acme_email == "" || can(regex("^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$", var.acme_email))
+    error_message = "Provide a valid email or leave empty."
   }
 }
-variable "oidc_issuer_url" {
-  description = "HTTPS issuer URL of your OIDC provider, e.g. https://accounts.google.com."
+variable "auto_approve_email_domain" {
+  description = "Exact email domain approved immediately at registration; every other account stays pending. Does not verify email ownership."
   type        = string
+  default     = "inkfnd.com"
   validation {
-    condition     = can(regex("^https://[^[:space:]?#]+$", var.oidc_issuer_url))
-    error_message = "Use your provider's HTTPS issuer URL."
-  }
-}
-variable "oidc_client_id" {
-  type        = string
-  description = "OIDC web application's client ID."
-}
-variable "oidc_client_secret" {
-  description = "OIDC client secret, supplied in ignored tfvars or TF_VAR_oidc_client_secret. Never persisted in plan/state."
-  type        = string
-  sensitive   = true
-  ephemeral   = true
-}
-variable "allowed_emails" {
-  type        = set(string)
-  description = "Exact verified email addresses permitted to sign in."
-  validation {
-    condition     = length(var.allowed_emails) > 0 && alltrue([for email in var.allowed_emails : can(regex("^[^[:space:]@*]+@[^[:space:]@*]+\\.[^[:space:]@*]+$", email))])
-    error_message = "Provide at least one exact email; wildcards are not allowed."
+    condition     = can(regex("^[a-z0-9-]+(\\.[a-z0-9-]+)+$", var.auto_approve_email_domain))
+    error_message = "Use one exact lowercase email domain, without @ or wildcards."
   }
 }
 variable "configuration_revision" {
-  description = "Increment after rotating an ephemeral OIDC secret or Slack webhook to trigger configuration delivery."
+  description = "Increment after rotating the ephemeral Slack webhook to trigger configuration delivery."
   type        = number
   default     = 1
 }

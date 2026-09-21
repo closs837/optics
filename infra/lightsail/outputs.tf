@@ -10,9 +10,6 @@ output "instance_name" {
 output "data_disk_name" {
   value = aws_lightsail_disk.data.name
 }
-output "oidc_redirect_uri" {
-  value = "https://${local.hostname}/oauth2/callback"
-}
 output "release_sha256" {
   value = local.release.sha256
 }

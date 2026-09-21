@@ -93,3 +93,102 @@ export const scenarios = sqliteTable(
   },
   (t) => [index('idx_scenarios_watch').on(t.watchId)],
 );
+
+// Local Lightsail accounts. Approval is independent of email verification.
+export const authUser = sqliteTable(
+  'auth_user',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    email: text('email').notNull().unique(),
+    emailVerified: integer('emailVerified', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    image: text('image'),
+    createdAt: integer('createdAt', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updatedAt', { mode: 'timestamp_ms' }).notNull(),
+    approval: text('approval', { enum: ['pending', 'approved', 'blocked'] })
+      .notNull()
+      .default('pending'),
+  },
+  (t) => [index('idx_auth_user_approval').on(t.approval)],
+);
+
+export const authSession = sqliteTable(
+  'auth_session',
+  {
+    id: text('id').primaryKey(),
+    expiresAt: integer('expiresAt', { mode: 'timestamp_ms' }).notNull(),
+    token: text('token').notNull().unique(),
+    createdAt: integer('createdAt', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updatedAt', { mode: 'timestamp_ms' }).notNull(),
+    ipAddress: text('ipAddress'),
+    userAgent: text('userAgent'),
+    userId: text('userId')
+      .notNull()
+      .references(() => authUser.id, { onDelete: 'cascade' }),
+  },
+  (t) => [index('idx_auth_session_user').on(t.userId)],
+);
+
+export const authAccount = sqliteTable(
+  'auth_account',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('accountId').notNull(),
+    providerId: text('providerId').notNull(),
+    userId: text('userId')
+      .notNull()
+      .references(() => authUser.id, { onDelete: 'cascade' }),
+    accessToken: text('accessToken'),
+    refreshToken: text('refreshToken'),
+    idToken: text('idToken'),
+    accessTokenExpiresAt: integer('accessTokenExpiresAt', {
+      mode: 'timestamp_ms',
+    }),
+    refreshTokenExpiresAt: integer('refreshTokenExpiresAt', {
+      mode: 'timestamp_ms',
+    }),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: integer('createdAt', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updatedAt', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [
+    index('idx_auth_account_user').on(t.userId),
+    uniqueIndex('idx_auth_account_provider').on(t.providerId, t.accountId),
+  ],
+);
+
+export const authVerification = sqliteTable(
+  'auth_verification',
+  {
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    value: text('value').notNull(),
+    expiresAt: integer('expiresAt', { mode: 'timestamp_ms' }).notNull(),
+    createdAt: integer('createdAt', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updatedAt', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('idx_auth_verification_identifier').on(t.identifier)],
+);
+
+export const authRateLimit = sqliteTable('auth_rate_limit', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull().unique(),
+  count: integer('count').notNull(),
+  lastRequest: integer('lastRequest').notNull(),
+});
+
+export const authApprovalLog = sqliteTable(
+  'auth_approval_log',
+  {
+    id: text('id').primaryKey(),
+    userId: text('userId')
+      .notNull()
+      .references(() => authUser.id, { onDelete: 'cascade' }),
+    action: text('action').notNull(),
+    createdAt: integer('createdAt').notNull(),
+  },
+  (t) => [index('idx_auth_approval_log_user').on(t.userId)],
+);

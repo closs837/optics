@@ -47,10 +47,13 @@ export default defineConfig(async () => {
       import('@cloudflare/vite-plugin'),
       import('@openai/sites-vite-plugin'),
     ]);
-    previewPlugins.push(sites(), cloudflare({
-      viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
-      config: localBindingConfig,
-    }));
+    previewPlugins.push(
+      sites(),
+      cloudflare({
+        viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+        config: localBindingConfig,
+      }),
+    );
   }
 
   return {

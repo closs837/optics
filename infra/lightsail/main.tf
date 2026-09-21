@@ -5,11 +5,9 @@ locals {
   hostname     = var.subdomain == "@" ? var.domain : "${var.subdomain}.${var.domain}"
   zone         = var.availability_zone == null ? "${var.aws_region}a" : var.availability_zone
   config = {
-    origin          = "https://${local.hostname}"
-    allowed_emails  = sort([for email in var.allowed_emails : lower(email)])
-    oidc_issuer_url = var.oidc_issuer_url
-    oidc_client_id  = var.oidc_client_id
-    acme_email      = var.acme_email
+    origin                    = "https://${local.hostname}"
+    auto_approve_email_domain = var.auto_approve_email_domain
+    acme_email                = var.acme_email
   }
   deploy_script_hash = sha256(join("", [for name in sort(tolist(fileset("${local.project_root}/deploy/lightsail", "**"))) : filesha256("${local.project_root}/deploy/lightsail/${name}")]))
 }
@@ -23,6 +21,8 @@ resource "terraform_data" "artifact" {
   }
 }
 resource "aws_lightsail_instance" "app" {
+  # Establish IP capacity before creating billable compute/storage resources.
+  depends_on        = [aws_lightsail_static_ip.app]
   name              = var.name
   availability_zone = local.zone
   blueprint_id      = "ubuntu_24_04"
@@ -62,10 +62,14 @@ resource "aws_lightsail_instance_public_ports" "app" {
     from_port = 22
     to_port   = 22
     cidrs     = ["${var.namecheap_client_ip}/32"]
+    # AWS's authenticated browser SSH service also witnesses the host keys
+    # returned by GetInstanceAccessDetails for strict SSH verification.
+    cidr_list_aliases = ["lightsail-connect"]
   }
   lifecycle { replace_triggered_by = [aws_lightsail_instance.app] }
 }
 resource "aws_lightsail_disk" "data" {
+  depends_on        = [aws_lightsail_static_ip.app]
   name              = "${var.name}-data"
   size_in_gb        = var.data_disk_size_gb
   availability_zone = local.zone
@@ -101,13 +105,12 @@ resource "terraform_data" "deploy" {
     working_dir = local.project_root
     command     = "node scripts/provision-lightsail.mjs"
     environment = {
-      POSITION_LENS_REGION      = var.aws_region
-      POSITION_LENS_AWS_PROFILE = var.aws_profile == null ? "" : var.aws_profile
-      POSITION_LENS_INSTANCE    = aws_lightsail_instance.app.name
-      POSITION_LENS_STATIC_IP   = aws_lightsail_static_ip.app.ip_address
-      POSITION_LENS_DISK        = aws_lightsail_disk.data.name
-      POSITION_LENS_CONFIG_JSON = jsonencode(local.config)
-      POSITION_LENS_OIDC_SECRET = var.oidc_client_secret
+      POSITION_LENS_REGION        = var.aws_region
+      POSITION_LENS_AWS_PROFILE   = var.aws_profile == null ? "" : var.aws_profile
+      POSITION_LENS_INSTANCE      = aws_lightsail_instance.app.name
+      POSITION_LENS_STATIC_IP     = aws_lightsail_static_ip.app.ip_address
+      POSITION_LENS_DISK          = aws_lightsail_disk.data.name
+      POSITION_LENS_CONFIG_JSON   = jsonencode(local.config)
       POSITION_LENS_SLACK_WEBHOOK = var.slack_webhook_url
     }
   }

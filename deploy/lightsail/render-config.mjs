@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { validateWebhook } from '../node/access-notifier.mjs';
 
-export function configuration(config, cookieSecret) {
+export function configuration(config, authSecret) {
   const slackWebhook = validateWebhook(config.slack_webhook_url);
   const origin = new URL(config.origin);
   if (
@@ -12,73 +12,35 @@ export function configuration(config, cookieSecret) {
     !/^[a-z0-9.-]+$/.test(origin.hostname)
   )
     throw new Error('Invalid app origin.');
-  if (!/^[^\s@{}]+@[^\s@{}]+\.[^\s@{}]+$/.test(config.acme_email))
+  if (
+    config.acme_email &&
+    !/^[^\s@{}]+@[^\s@{}]+\.[^\s@{}]+$/.test(config.acme_email)
+  )
     throw new Error('Invalid ACME email.');
   if (
-    !config.allowed_emails?.length ||
-    config.allowed_emails.some(
-      (email) => !/^[^\s@*]+@[^\s@*]+\.[^\s@*]+$/.test(email),
+    !/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(
+      config.auto_approve_email_domain ?? '',
     )
   )
-    throw new Error('Exact allowed emails are required.');
-  if (
-    new URL(config.oidc_issuer_url).protocol !== 'https:' ||
-    !config.oidc_client_id ||
-    !config.oidc_client_secret
-  )
-    throw new Error('OIDC configuration is incomplete.');
-  const values = {
-    provider: 'oidc',
-    oidc_issuer_url: config.oidc_issuer_url,
-    client_id: config.oidc_client_id,
-    client_secret: config.oidc_client_secret,
-    redirect_url: origin.origin + '/oauth2/callback',
-    scope: 'openid email profile',
-    code_challenge_method: 'S256',
-    insecure_oidc_skip_nonce: false,
-    insecure_oidc_allow_unverified_email: false,
-    http_address: '127.0.0.1:4180',
-    upstreams: ['http://127.0.0.1:3000/'],
-    api_routes: ['^/api/'],
-    reverse_proxy: true,
-    trusted_proxy_ips: ['127.0.0.1/32', '::1/128'],
-    pass_host_header: true,
-    pass_user_headers: true,
-    pass_basic_auth: false,
-    skip_auth_strip_headers: true,
-    authenticated_emails_file: '/etc/position-lens/allowed-emails',
-    cookie_secret: cookieSecret,
-    cookie_name: '__Host-position_lens',
-    cookie_secure: true,
-    cookie_httponly: true,
-    cookie_samesite: 'lax',
-    cookie_path: '/',
-    cookie_expire: '12h',
-    cookie_refresh: '1h',
-    skip_provider_button: false,
-    request_logging: false,
-  };
+    throw new Error('Configure an exact lowercase trial approval domain.');
+  if (typeof authSecret !== 'string' || authSecret.length < 43)
+    throw new Error('A persistent authentication secret is required.');
   return {
     runtime:
       JSON.stringify(
         {
           origin: origin.origin,
-          oidc_issuer_url: config.oidc_issuer_url,
-          allowed_emails: config.allowed_emails,
+          auth_secret: authSecret,
+          auto_approve_email_domain: config.auto_approve_email_domain,
           slack_webhook_url: slackWebhook,
         },
         null,
         2,
       ) + '\n',
-    emails: config.allowed_emails.join('\n') + '\n',
-    proxy:
-      Object.entries(values)
-        .map(([key, value]) => key + ' = ' + JSON.stringify(value))
-        .join('\n') + '\n',
     caddy:
-      '{\n  admin off\n  email ' +
-      config.acme_email +
-      '\n  storage file_system {\n    root /srv/position-lens-data/caddy\n  }\n}\n' +
+      '{\n  admin off\n' +
+      (config.acme_email ? '  email ' + config.acme_email + '\n' : '') +
+      '  storage file_system {\n    root /srv/position-lens-data/caddy\n  }\n}\n' +
       origin.host +
       ` {
   encode zstd gzip
@@ -94,7 +56,7 @@ export function configuration(config, cookieSecret) {
   }
   @internal path /_health
   respond @internal 404
-  reverse_proxy 127.0.0.1:4180 {
+  reverse_proxy 127.0.0.1:3000 {
     header_up -oai-*
     header_up -X-Forwarded-User
     header_up -X-Forwarded-Email
@@ -110,33 +72,23 @@ export function configuration(config, cookieSecret) {
 }
 if (process.argv[1]?.endsWith('/render-config.mjs')) {
   const config = JSON.parse(await readFile(process.argv[2], 'utf8'));
-  const secretPath = '/srv/position-lens-data/secrets/oauth-cookie';
+  const secretPath = '/srv/position-lens-data/secrets/auth-secret';
   await mkdir('/srv/position-lens-data/secrets', {
     recursive: true,
     mode: 0o700,
   });
-  let cookie;
+  let secret;
   try {
-    cookie = await readFile(secretPath, 'utf8');
+    secret = await readFile(secretPath, 'utf8');
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
-    cookie = randomBytes(32).toString('base64url');
-    await writeFile(secretPath, cookie, { mode: 0o600, flag: 'wx' });
+    secret = randomBytes(48).toString('base64url');
+    await writeFile(secretPath, secret, { mode: 0o600, flag: 'wx' });
   }
-  const rendered = configuration(config, cookie.trim());
+  const rendered = configuration(config, secret.trim());
   await chmod('/etc/position-lens', 0o755);
   for (const [filename, content, account] of [
     ['/etc/position-lens/runtime.json', rendered.runtime, 'position-lens'],
-    [
-      '/etc/position-lens/allowed-emails',
-      rendered.emails,
-      'position-lens-auth',
-    ],
-    [
-      '/etc/position-lens/oauth2-proxy.cfg',
-      rendered.proxy,
-      'position-lens-auth',
-    ],
     ['/etc/caddy/Caddyfile', rendered.caddy, 'caddy'],
   ]) {
     await writeFile(filename, content, { mode: 0o640 });

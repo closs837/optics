@@ -24,7 +24,9 @@ await Promise.any(
     access(path.join(root, options.terraform, name)),
   ),
 ).catch(() => {
-  throw new Error('Fill infra/lightsail/terraform.tfvars or terraform.tfvars.json with the deployment parameters.');
+  throw new Error(
+    'Fill infra/lightsail/terraform.tfvars or terraform.tfvars.json with the deployment parameters.',
+  );
 });
 function run(command, args) {
   const result = spawnSync(command, args, {
